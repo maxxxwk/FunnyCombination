@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.FunnyCombination.Base" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.FunnyCombination.Splash" parent="Theme.SplashScreen">
+        <item name="postSplashScreenTheme">@style/Theme.FunnyCombination.Base</item>
+        <item name="windowSplashScreenBackground">#FF97C4F2</item>
+    </style>
+</resources>

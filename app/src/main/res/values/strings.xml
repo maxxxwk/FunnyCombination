@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">Funny Combination</string>
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="privacy_policy_text">Lorem ipsum dolor sit amet, inani liber mel ea, stet instructior sed ei. An vis placerat suscipiantur contentiones. Eum no iudico ignota scripta, alia porro nec ne. Novum mentitum qualisque sed at. Eu velit dolor tractatos vix. Nibh ubique torquatos mei et, ius ei choro detraxit imperdiet.\n Ei soleat splendide eum, no quis maiorum abhorreant sit. Sed at nibh iriure nominavi, nec sumo gubergren ea. Cu clita explicari prodesset nam, at commune democritum pro, quo eu oratio option. Mea euismod patrioque inciderint id, pro habemus definiebas ei. Pertinax partiendo disputando eu nam, cu causae patrioque rationibus qui.</string>
+    <string name="high_scores_screen_title">High Scores</string>
+    <string name="something_went_wrong">Something went wrong… :(</string>
+    <string name="no_results_yet">No results yet.</string>
+    <string name="date">Date</string>
+    <string name="score">Score</string>
+    <string name="game_screen_title">Level - %1$d</string>
+    <string name="game_over">Game Over!</string>
+    <string name="new_high_score">New High Score!</string>
+    <string name="play">Play</string>
+    <string name="high_score">High Score</string>
+    <string name="exit">Exit</string>
+    <string name="main_menu">Main Menu</string>
+    <string name="play_again">Play Again</string>
+</resources>
