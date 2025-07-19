@@ -20,12 +20,12 @@ class SavingHighScoreWorker @AssistedInject constructor(
     override suspend fun doWork(): Result {
         val score = inputData.getInt(SCORE_KEY, -1)
         if (score == -1) return Result.failure()
-        val hasHigherResult = try {
-            highScoresDao.hasHigherResult(score)
+        val isNewRecord = try {
+            !highScoresDao.hasBetterPreviousResult(score)
         } catch (_: Exception) {
             return Result.failure()
         }
-        if (!hasHigherResult) {
+        if (isNewRecord) {
             val timestamp = inputData.getLong(TIMESTAMP_KEY, -1L)
             if (timestamp == -1L) return Result.failure()
             try {
@@ -39,7 +39,7 @@ class SavingHighScoreWorker @AssistedInject constructor(
                 return Result.failure()
             }
         }
-        return Result.success(workDataOf(IS_NEW_HIGH_SCORE_KEY to !hasHigherResult))
+        return Result.success(workDataOf(IS_NEW_HIGH_SCORE_KEY to isNewRecord))
     }
 
     companion object {

@@ -7,8 +7,8 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface HighScoresDao {
-    @Query("SELECT EXISTS(SELECT 1 FROM high_scores WHERE score > :score)")
-    suspend fun hasHigherResult(score: Int): Boolean
+    @Query("SELECT EXISTS(SELECT 1 FROM high_scores WHERE score >= :score)")
+    suspend fun hasBetterPreviousResult(score: Int): Boolean
 
     @Insert
     suspend fun insertNewHighScore(highScoreEntity: HighScoreEntity)
