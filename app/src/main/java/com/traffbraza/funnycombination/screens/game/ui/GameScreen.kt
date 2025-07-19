@@ -1,8 +1,11 @@
 package com.traffbraza.funnycombination.screens.game.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -17,7 +20,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -61,14 +63,13 @@ fun GameScreen(
     ) { innerPaddings ->
         when (state) {
             is GameScreenState.Demonstration -> (state as? GameScreenState.Demonstration)?.let {
-                GameBoard(
+                GameBoardDemonstration(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(innerPaddings)
                         .padding(16.dp),
-                    emojis = it.sequence.subList(0, it.activeIndex + 1),
-                    enabledInput = false,
-                    onEmojiSelected = viewModel::onEmojiSelected
+                    emojis = it.sequence,
+                    lastVisibleElementIndex = it.activeIndex
                 )
             }
 
@@ -84,32 +85,34 @@ fun GameScreen(
                     }
                 )
 
-                GameBoard(
+                GameBoardPlayerInput(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(innerPaddings)
                         .padding(16.dp),
                     emojis = gameOverState.playerInput,
-                    enabledInput = false,
+                    sequenceCount = gameOverState.sequenceCount,
                     onEmojiSelected = viewModel::onEmojiSelected
                 )
             }
 
-            GameScreenState.Idle -> Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
+            GameScreenState.Idle -> GameBoardDemonstration(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPaddings)
+                    .padding(16.dp),
+                emojis = emptyList(),
+                lastVisibleElementIndex = -1
+            )
 
             is GameScreenState.PlayerInput -> (state as? GameScreenState.PlayerInput)?.let {
-                GameBoard(
+                GameBoardPlayerInput(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(innerPaddings)
                         .padding(16.dp),
                     emojis = it.playerInput,
-                    enabledInput = true,
+                    sequenceCount = it.sequenceCount,
                     onEmojiSelected = viewModel::onEmojiSelected
                 )
             }
@@ -118,36 +121,36 @@ fun GameScreen(
 }
 
 @Composable
-private fun GameBoard(
+private fun GameBoardDemonstration(
     modifier: Modifier = Modifier,
     emojis: List<Emoji>,
-    enabledInput: Boolean,
-    onEmojiSelected: (Emoji) -> Unit
+    lastVisibleElementIndex: Int
 ) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Emojis(
+        EmojisDemonstration(
             modifier = Modifier.fillMaxWidth(),
-            emojis = emojis
+            emojis = emojis,
+            lastVisibleElementIndex = lastVisibleElementIndex
         )
         Spacer(
             modifier = Modifier.weight(1f)
         )
         InputPanel(
             modifier = Modifier.fillMaxWidth(),
-            isActive = enabledInput,
-            onClick = onEmojiSelected
+            isActive = false,
+            onClick = {}
         )
     }
 }
 
-
 @Composable
-private fun Emojis(
+private fun EmojisDemonstration(
     modifier: Modifier = Modifier,
-    emojis: List<Emoji>
+    emojis: List<Emoji>,
+    lastVisibleElementIndex: Int
 ) {
     FlowRow(
         modifier = modifier,
@@ -155,13 +158,71 @@ private fun Emojis(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         itemVerticalAlignment = Alignment.CenterVertically
     ) {
-        emojis.forEach { emoji ->
+        emojis.forEachIndexed { index, emoji ->
             AnimatedVisibility(
-                visible = true,
-                enter = scaleIn() + fadeIn()
+                visible = index <= lastVisibleElementIndex,
+                enter = slideInVertically(animationSpec = tween()) +
+                        fadeIn(animationSpec = tween()),
+                exit = fadeOut()
             ) {
                 Text(
                     text = emoji.icon,
+                    fontSize = 32.sp
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun GameBoardPlayerInput(
+    modifier: Modifier = Modifier,
+    emojis: List<Emoji>,
+    sequenceCount: Int,
+    onEmojiSelected: (Emoji) -> Unit
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        EmojisPlayerInput(
+            modifier = Modifier.fillMaxWidth(),
+            emojis = emojis,
+            sequenceCount = sequenceCount
+        )
+        Spacer(
+            modifier = Modifier.weight(1f)
+        )
+        InputPanel(
+            modifier = Modifier.fillMaxWidth(),
+            isActive = true,
+            onClick = onEmojiSelected
+        )
+    }
+}
+
+@Composable
+private fun EmojisPlayerInput(
+    modifier: Modifier = Modifier,
+    emojis: List<Emoji>,
+    sequenceCount: Int
+) {
+    FlowRow(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        itemVerticalAlignment = Alignment.CenterVertically
+    ) {
+        repeat(sequenceCount) { index ->
+            val emoji = if (index <= (emojis.size - 1)) emojis[index] else null
+            AnimatedVisibility(
+                visible = emoji != null,
+                enter = scaleIn(animationSpec = tween()) +
+                        fadeIn(animationSpec = tween()),
+                exit = fadeOut(animationSpec = tween())
+            ) {
+                Text(
+                    text = emoji?.icon.orEmpty(),
                     fontSize = 32.sp
                 )
             }

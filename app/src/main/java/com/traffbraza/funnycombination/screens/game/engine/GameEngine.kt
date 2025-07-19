@@ -1,6 +1,5 @@
 package com.traffbraza.funnycombination.screens.game.engine
 
-import android.util.Log
 import androidx.work.BackoffPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
@@ -65,6 +64,12 @@ class GameEngine @Inject constructor(
         demonstrationJob?.cancel()
         demonstrationJob = scope.launch(dispatcher) {
             delay(DEMONSTRATION_START_DELAY_MS)
+            mutableStateFlow.value = GameScreenState.Demonstration(
+                level = level,
+                sequence = currentSequence,
+                activeIndex = -1
+            )
+            delay(DEMONSTRATION_PREPARE_DELAY_MS)
             for (i in currentSequence.indices) {
                 mutableStateFlow.value = GameScreenState.Demonstration(
                     level = level,
@@ -75,7 +80,8 @@ class GameEngine @Inject constructor(
             }
             mutableStateFlow.value = GameScreenState.PlayerInput(
                 level = level,
-                playerInput = emptyList()
+                playerInput = emptyList(),
+                sequenceCount = currentSequence.size
             )
         }
     }
@@ -90,7 +96,8 @@ class GameEngine @Inject constructor(
         if (emoji != currentSequence[currentPlayerInput.size - 1]) {
             mutableStateFlow.value = GameScreenState.GameOver(
                 score = lastSuccessfulScore,
-                playerInput = currentState.playerInput
+                playerInput = currentState.playerInput,
+                sequenceCount = currentSequence.size
             ).also(::startSavingHighScoreWorker)
 
             return
@@ -98,7 +105,8 @@ class GameEngine @Inject constructor(
 
         mutableStateFlow.value = GameScreenState.PlayerInput(
             level = level,
-            playerInput = currentPlayerInput
+            playerInput = currentPlayerInput,
+            sequenceCount = currentSequence.size
         )
 
         if (currentPlayerInput.size == currentSequence.size) {
@@ -106,9 +114,9 @@ class GameEngine @Inject constructor(
             if (level >= MAX_LEVEL) {
                 mutableStateFlow.value = GameScreenState.GameOver(
                     score = lastSuccessfulScore,
-                    playerInput = currentState.playerInput
+                    playerInput = currentState.playerInput,
+                    sequenceCount = currentSequence.size
                 ).also(::startSavingHighScoreWorker)
-
             } else {
                 generateNextLevel()
             }
@@ -161,5 +169,6 @@ class GameEngine @Inject constructor(
         private const val MAX_LEVEL = 30
         private const val DEMONSTRATION_DELAY_MS = 1000L
         private const val DEMONSTRATION_START_DELAY_MS = 300L
+        private const val DEMONSTRATION_PREPARE_DELAY_MS = 100L
     }
 }
