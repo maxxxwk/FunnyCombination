@@ -63,7 +63,6 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     }
-
                     composable<NavigationRoute.PrivacyPolicyScreen> {
                         PrivacyPolicyScreen(
                             onBack = {
@@ -74,7 +73,6 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     }
-
                     composable<NavigationRoute.HighScoreScreen> {
                         HighScoreScreen(
                             viewModel = hiltViewModel(),
@@ -86,7 +84,6 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     }
-
                     composable<NavigationRoute.GameScreen> {
                         GameScreen(
                             viewModel = hiltViewModel(),
@@ -112,7 +109,6 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     }
-
                     dialog<NavigationRoute.GameOverDialog> {
                         val route = it.toRoute<NavigationRoute.GameOverDialog>()
                         GameOverDialog(

@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.update
 
 @HiltViewModel
 class HighScoreScreenViewModel @Inject constructor(
-    private val resultsHistoryRepository: ResultsHistoryRepository
+    resultsHistoryRepository: ResultsHistoryRepository
 ) : BaseViewModel<HighScoreScreenState>(
     initialState = HighScoreScreenState.Loading
 ) {

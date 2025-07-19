@@ -69,7 +69,7 @@ fun GameScreen(
                         .padding(innerPaddings)
                         .padding(16.dp),
                     emojis = it.sequence,
-                    lastVisibleElementIndex = it.activeIndex
+                    lastVisibleElementIndex = it.lastVisibleElementIndex
                 )
             }
 
@@ -91,8 +91,8 @@ fun GameScreen(
                         .padding(innerPaddings)
                         .padding(16.dp),
                     emojis = gameOverState.playerInput,
-                    sequenceCount = gameOverState.sequenceCount,
-                    onEmojiSelected = viewModel::onEmojiSelected
+                    sequenceCount = gameOverState.sequenceSize,
+                    onEmojiSelected = {}
                 )
             }
 
@@ -112,7 +112,7 @@ fun GameScreen(
                         .padding(innerPaddings)
                         .padding(16.dp),
                     emojis = it.playerInput,
-                    sequenceCount = it.sequenceCount,
+                    sequenceCount = it.sequenceSize,
                     onEmojiSelected = viewModel::onEmojiSelected
                 )
             }

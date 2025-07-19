@@ -9,8 +9,6 @@ import com.traffbraza.funnycombination.di.qualifiers.DispatcherDefault
 import com.traffbraza.funnycombination.screens.game.models.Emoji
 import com.traffbraza.funnycombination.screens.game.models.GameScreenState
 import com.traffbraza.funnycombination.workers.SavingHighScoreWorker
-import com.traffbraza.funnycombination.workers.SavingHighScoreWorker.Companion.IS_NEW_HIGH_SCORE_KEY
-import com.traffbraza.funnycombination.workers.SavingHighScoreWorker.Companion.SCORE_KEY
 import de.palm.composestateevents.consumed
 import de.palm.composestateevents.triggered
 import javax.inject.Inject
@@ -53,6 +51,49 @@ class GameEngine @Inject constructor(
         generateNextLevel()
     }
 
+    fun onEmojiSelected(emoji: Emoji) {
+        val currentState = mutableStateFlow.value
+        if (currentState !is GameScreenState.PlayerInput) return
+
+        val currentPlayerInput = currentState.playerInput.toMutableList()
+        currentPlayerInput.add(emoji)
+
+        if (emoji != currentSequence[currentPlayerInput.size - 1]) {
+            mutableStateFlow.value = GameScreenState.GameOver(
+                score = lastSuccessfulScore,
+                playerInput = currentState.playerInput,
+                sequenceSize = currentSequence.size
+            ).also(::startSavingHighScoreWorker)
+            return
+        }
+
+        mutableStateFlow.value = GameScreenState.PlayerInput(
+            level = level,
+            playerInput = currentPlayerInput,
+            sequenceSize = currentSequence.size
+        )
+
+        if (currentPlayerInput.size == currentSequence.size) {
+            lastSuccessfulScore = currentSequence.size
+            if (level >= MAX_LEVEL) {
+                mutableStateFlow.value = GameScreenState.GameOver(
+                    score = lastSuccessfulScore,
+                    playerInput = currentState.playerInput,
+                    sequenceSize = currentSequence.size
+                ).also(::startSavingHighScoreWorker)
+            } else {
+                generateNextLevel()
+            }
+        }
+    }
+
+    fun showDialogEventConsumed() {
+        (stateFlow.value as? GameScreenState.GameOver)?.let {
+            mutableStateFlow.value = it.copy(showGameOverDialogEvent = consumed())
+        }
+    }
+
+
     private fun generateNextLevel() {
         level++
         val sequenceLength = INITIAL_SEQUENCE_LENGTH + level - 1
@@ -67,59 +108,22 @@ class GameEngine @Inject constructor(
             mutableStateFlow.value = GameScreenState.Demonstration(
                 level = level,
                 sequence = currentSequence,
-                activeIndex = -1
+                lastVisibleElementIndex = -1
             )
             delay(DEMONSTRATION_PREPARE_DELAY_MS)
             for (i in currentSequence.indices) {
                 mutableStateFlow.value = GameScreenState.Demonstration(
                     level = level,
                     sequence = currentSequence,
-                    activeIndex = i
+                    lastVisibleElementIndex = i
                 )
                 delay(DEMONSTRATION_DELAY_MS)
             }
             mutableStateFlow.value = GameScreenState.PlayerInput(
                 level = level,
                 playerInput = emptyList(),
-                sequenceCount = currentSequence.size
+                sequenceSize = currentSequence.size
             )
-        }
-    }
-
-    fun onEmojiSelected(emoji: Emoji) {
-        val currentState = mutableStateFlow.value
-        if (currentState !is GameScreenState.PlayerInput) return
-
-        val currentPlayerInput = currentState.playerInput.toMutableList()
-        currentPlayerInput.add(emoji)
-
-        if (emoji != currentSequence[currentPlayerInput.size - 1]) {
-            mutableStateFlow.value = GameScreenState.GameOver(
-                score = lastSuccessfulScore,
-                playerInput = currentState.playerInput,
-                sequenceCount = currentSequence.size
-            ).also(::startSavingHighScoreWorker)
-
-            return
-        }
-
-        mutableStateFlow.value = GameScreenState.PlayerInput(
-            level = level,
-            playerInput = currentPlayerInput,
-            sequenceCount = currentSequence.size
-        )
-
-        if (currentPlayerInput.size == currentSequence.size) {
-            lastSuccessfulScore = currentSequence.size
-            if (level >= MAX_LEVEL) {
-                mutableStateFlow.value = GameScreenState.GameOver(
-                    score = lastSuccessfulScore,
-                    playerInput = currentState.playerInput,
-                    sequenceCount = currentSequence.size
-                ).also(::startSavingHighScoreWorker)
-            } else {
-                generateNextLevel()
-            }
         }
     }
 
@@ -127,7 +131,7 @@ class GameEngine @Inject constructor(
         val workRequest = OneTimeWorkRequestBuilder<SavingHighScoreWorker>()
             .setInputData(
                 workDataOf(
-                    SCORE_KEY to gameOverState.score,
+                    SavingHighScoreWorker.SCORE_KEY to gameOverState.score,
                     SavingHighScoreWorker.TIMESTAMP_KEY to System.currentTimeMillis()
                 )
             ).setBackoffCriteria(
@@ -142,7 +146,7 @@ class GameEngine @Inject constructor(
                     if (workInfo.state.isFinished) {
                         if (workInfo.state == WorkInfo.State.SUCCEEDED) {
                             val isNewHighScore = workInfo.outputData.getBoolean(
-                                IS_NEW_HIGH_SCORE_KEY,
+                                SavingHighScoreWorker.IS_NEW_HIGH_SCORE_KEY,
                                 false
                             )
                             mutableStateFlow.value = gameOverState.copy(
@@ -155,12 +159,6 @@ class GameEngine @Inject constructor(
                         }
                     }
                 }
-        }
-    }
-
-    fun showDialogEventConsumed() {
-        (stateFlow.value as? GameScreenState.GameOver)?.let {
-            mutableStateFlow.value = it.copy(showGameOverDialogEvent = consumed())
         }
     }
 
