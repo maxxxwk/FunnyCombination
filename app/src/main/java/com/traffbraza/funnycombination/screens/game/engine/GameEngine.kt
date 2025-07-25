@@ -60,6 +60,7 @@ class GameEngine @Inject constructor(
 
         if (emoji != currentSequence[currentPlayerInput.size - 1]) {
             mutableStateFlow.value = GameScreenState.GameOver(
+                level = currentState.level,
                 score = lastSuccessfulScore,
                 playerInput = currentState.playerInput,
                 sequenceSize = currentSequence.size
@@ -77,6 +78,7 @@ class GameEngine @Inject constructor(
             lastSuccessfulScore = currentSequence.size
             if (level >= MAX_LEVEL) {
                 mutableStateFlow.value = GameScreenState.GameOver(
+                    level = currentState.level,
                     score = lastSuccessfulScore,
                     playerInput = currentState.playerInput,
                     sequenceSize = currentSequence.size

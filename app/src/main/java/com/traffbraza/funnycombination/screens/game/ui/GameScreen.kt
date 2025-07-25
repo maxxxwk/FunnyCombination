@@ -44,7 +44,6 @@ fun GameScreen(
     navigator: GameScreenNavigator
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = JordyBlue,
@@ -52,93 +51,75 @@ fun GameScreen(
             DefaultTopAppBar(
                 title = stringResource(
                     R.string.game_screen_title,
-                    state.getCurrentLevel()
+                    state.level
                 ),
                 onBack = navigator::onBack
             )
         }
     ) { innerPaddings ->
-        when (state) {
-            is GameScreenState.Demonstration -> (state as? GameScreenState.Demonstration)?.let {
-                GameBoardDemonstration(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPaddings)
-                        .padding(16.dp),
-                    emojis = it.sequence,
-                    lastVisibleElementIndex = it.lastVisibleElementIndex
-                )
-            }
-
-            is GameScreenState.GameOver -> (state as? GameScreenState.GameOver)?.let { gameOverState ->
-                EventEffect(
-                    event = gameOverState.showGameOverDialogEvent,
-                    onConsumed = viewModel::showDialogEventConsumed,
-                    action = {
-                        navigator.showGameOverDialog(
-                            score = gameOverState.score,
-                            isNewRecord = it
-                        )
-                    }
-                )
-
-                GameBoardPlayerInput(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPaddings)
-                        .padding(16.dp),
-                    emojis = gameOverState.playerInput,
-                    sequenceCount = gameOverState.sequenceSize,
-                    onEmojiSelected = {}
-                )
-            }
-
-            GameScreenState.Idle -> GameBoardDemonstration(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPaddings)
-                    .padding(16.dp),
-                emojis = emptyList(),
-                lastVisibleElementIndex = -1
-            )
-
-            is GameScreenState.PlayerInput -> (state as? GameScreenState.PlayerInput)?.let {
-                GameBoardPlayerInput(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPaddings)
-                        .padding(16.dp),
-                    emojis = it.playerInput,
-                    sequenceCount = it.sequenceSize,
-                    onEmojiSelected = viewModel::onEmojiSelected
-                )
-            }
-        }
+        GameScreenContent(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPaddings),
+            state = state,
+            onEmojiSelected = viewModel::onEmojiSelected,
+            showGameOverDialog = navigator::showGameOverDialog,
+            onShowGameOverDialogEventConsumed = viewModel::showDialogEventConsumed
+        )
     }
 }
 
 @Composable
-private fun GameBoardDemonstration(
+private fun GameScreenContent(
     modifier: Modifier = Modifier,
-    emojis: List<Emoji>,
-    lastVisibleElementIndex: Int
+    state: GameScreenState,
+    onEmojiSelected: (Emoji) -> Unit,
+    showGameOverDialog: (score: Int, isNewRecord: Boolean) -> Unit,
+    onShowGameOverDialogEventConsumed: () -> Unit
 ) {
     Column(
-        modifier = modifier,
+        modifier = modifier.padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        EmojisDemonstration(
-            modifier = Modifier.fillMaxWidth(),
-            emojis = emojis,
-            lastVisibleElementIndex = lastVisibleElementIndex
-        )
+        when (state) {
+            is GameScreenState.Demonstration -> EmojisDemonstration(
+                modifier = Modifier.fillMaxWidth(),
+                emojis = state.sequence,
+                lastVisibleElementIndex = state.lastVisibleElementIndex
+            )
+
+            is GameScreenState.GameOver -> {
+                EventEffect(
+                    event = state.showGameOverDialogEvent,
+                    onConsumed = onShowGameOverDialogEventConsumed,
+                    action = { showGameOverDialog(state.score, it) }
+                )
+                EmojisPlayerInput(
+                    modifier = Modifier.fillMaxWidth(),
+                    emojis = state.playerInput,
+                    sequenceCount = state.sequenceSize
+                )
+            }
+
+            GameScreenState.Idle -> EmojisDemonstration(
+                modifier = Modifier.fillMaxWidth(),
+                emojis = emptyList(),
+                lastVisibleElementIndex = -1
+            )
+
+            is GameScreenState.PlayerInput -> EmojisPlayerInput(
+                modifier = Modifier.fillMaxWidth(),
+                emojis = state.playerInput,
+                sequenceCount = state.sequenceSize
+            )
+        }
         Spacer(
             modifier = Modifier.weight(1f)
         )
         InputPanel(
             modifier = Modifier.fillMaxWidth(),
-            isActive = false,
-            onClick = {}
+            isActive = state is GameScreenState.PlayerInput,
+            onClick = onEmojiSelected
         )
     }
 }
@@ -168,33 +149,6 @@ private fun EmojisDemonstration(
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun GameBoardPlayerInput(
-    modifier: Modifier = Modifier,
-    emojis: List<Emoji>,
-    sequenceCount: Int,
-    onEmojiSelected: (Emoji) -> Unit
-) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        EmojisPlayerInput(
-            modifier = Modifier.fillMaxWidth(),
-            emojis = emojis,
-            sequenceCount = sequenceCount
-        )
-        Spacer(
-            modifier = Modifier.weight(1f)
-        )
-        InputPanel(
-            modifier = Modifier.fillMaxWidth(),
-            isActive = true,
-            onClick = onEmojiSelected
-        )
     }
 }
 

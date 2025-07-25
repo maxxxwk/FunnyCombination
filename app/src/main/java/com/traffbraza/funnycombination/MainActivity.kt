@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -32,105 +33,110 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         installSplashScreen()
         setContent {
-            val navController = rememberNavController()
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(JordyBlue)
             ) {
-                NavHost(
-                    navController = navController,
-                    startDestination = NavigationRoute.MainScreen
-                ) {
-                    composable<NavigationRoute.MainScreen> {
-                        MainScreen(
-                            navigator = object : MainScreenNavigator {
-                                override fun navigateToGame() {
-                                    navController.navigate(NavigationRoute.GameScreen)
-                                }
+                AppNavigation()
+            }
+        }
+    }
 
-                                override fun navigateToHighScores() {
-                                    navController.navigate(NavigationRoute.HighScoreScreen)
-                                }
+    @Composable
+    private fun AppNavigation() {
+        val navController = rememberNavController()
+        NavHost(
+            navController = navController,
+            startDestination = NavigationRoute.MainScreen
+        ) {
+            composable<NavigationRoute.MainScreen> {
+                MainScreen(
+                    navigator = object : MainScreenNavigator {
+                        override fun navigateToGame() {
+                            navController.navigate(NavigationRoute.GameScreen)
+                        }
 
-                                override fun navigateToPrivacyPolicy() {
-                                    navController.navigate(NavigationRoute.PrivacyPolicyScreen)
-                                }
+                        override fun navigateToHighScores() {
+                            navController.navigate(NavigationRoute.HighScoreScreen)
+                        }
 
-                                override fun exit() {
-                                    finish()
-                                }
-                            }
+                        override fun navigateToPrivacyPolicy() {
+                            navController.navigate(NavigationRoute.PrivacyPolicyScreen)
+                        }
+
+                        override fun exit() {
+                            finish()
+                        }
+                    }
+                )
+            }
+            composable<NavigationRoute.PrivacyPolicyScreen> {
+                PrivacyPolicyScreen(
+                    onBack = {
+                        navController.popBackStack(
+                            route = NavigationRoute.MainScreen,
+                            inclusive = false
                         )
                     }
-                    composable<NavigationRoute.PrivacyPolicyScreen> {
-                        PrivacyPolicyScreen(
-                            onBack = {
-                                navController.popBackStack(
-                                    route = NavigationRoute.MainScreen,
-                                    inclusive = false
+                )
+            }
+            composable<NavigationRoute.HighScoreScreen> {
+                HighScoreScreen(
+                    viewModel = hiltViewModel(),
+                    onBack = {
+                        navController.popBackStack(
+                            route = NavigationRoute.MainScreen,
+                            inclusive = false
+                        )
+                    }
+                )
+            }
+            composable<NavigationRoute.GameScreen> {
+                GameScreen(
+                    viewModel = hiltViewModel(),
+                    navigator = object : GameScreenNavigator {
+                        override fun showGameOverDialog(
+                            score: Int,
+                            isNewRecord: Boolean
+                        ) {
+                            navController.navigate(
+                                NavigationRoute.GameOverDialog(
+                                    score = score,
+                                    isNewRecord = isNewRecord
                                 )
-                            }
-                        )
-                    }
-                    composable<NavigationRoute.HighScoreScreen> {
-                        HighScoreScreen(
-                            viewModel = hiltViewModel(),
-                            onBack = {
-                                navController.popBackStack(
-                                    route = NavigationRoute.MainScreen,
-                                    inclusive = false
-                                )
-                            }
-                        )
-                    }
-                    composable<NavigationRoute.GameScreen> {
-                        GameScreen(
-                            viewModel = hiltViewModel(),
-                            navigator = object : GameScreenNavigator {
-                                override fun showGameOverDialog(
-                                    score: Int,
-                                    isNewRecord: Boolean
-                                ) {
-                                    navController.navigate(
-                                        NavigationRoute.GameOverDialog(
-                                            score = score,
-                                            isNewRecord = isNewRecord
-                                        )
-                                    )
-                                }
+                            )
+                        }
 
-                                override fun onBack() {
-                                    navController.popBackStack(
-                                        route = NavigationRoute.MainScreen,
-                                        inclusive = false
-                                    )
-                                }
-                            }
-                        )
+                        override fun onBack() {
+                            navController.popBackStack(
+                                route = NavigationRoute.MainScreen,
+                                inclusive = false
+                            )
+                        }
                     }
-                    dialog<NavigationRoute.GameOverDialog> {
-                        val route = it.toRoute<NavigationRoute.GameOverDialog>()
-                        GameOverDialog(
-                            score = route.score,
-                            isNewRecord = route.isNewRecord,
-                            navigator = object : GameOverDialogNavigator {
-                                override fun onBack() {
-                                    navController.popBackStack(
-                                        route = NavigationRoute.MainScreen,
-                                        inclusive = false
-                                    )
-                                }
+                )
+            }
+            dialog<NavigationRoute.GameOverDialog> {
+                val route = it.toRoute<NavigationRoute.GameOverDialog>()
+                GameOverDialog(
+                    score = route.score,
+                    isNewRecord = route.isNewRecord,
+                    navigator = object : GameOverDialogNavigator {
+                        override fun onBack() {
+                            navController.popBackStack(
+                                route = NavigationRoute.MainScreen,
+                                inclusive = false
+                            )
+                        }
 
-                                override fun navigateToNewGame() {
-                                    navController.navigate(route = NavigationRoute.GameScreen) {
-                                        popUpTo(route = NavigationRoute.MainScreen)
-                                    }
-                                }
+                        override fun navigateToNewGame() {
+                            navController.navigate(route = NavigationRoute.GameScreen) {
+                                popUpTo(route = NavigationRoute.MainScreen)
                             }
-                        )
+                        }
                     }
-                }
+                )
             }
         }
     }

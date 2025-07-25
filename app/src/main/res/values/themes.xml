@@ -6,5 +6,6 @@
     <style name="Theme.FunnyCombination.Splash" parent="Theme.SplashScreen">
         <item name="postSplashScreenTheme">@style/Theme.FunnyCombination.Base</item>
         <item name="windowSplashScreenBackground">#FF97C4F2</item>
+        <item name="windowSplashScreenAnimationDuration">2500</item>
     </style>
 </resources>

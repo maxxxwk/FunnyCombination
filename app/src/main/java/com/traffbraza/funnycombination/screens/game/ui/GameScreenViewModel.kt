@@ -16,10 +16,6 @@ class GameScreenViewModel @Inject constructor(
 
     init {
         gameEngine.attachScope(viewModelScope)
-        startNewGame()
-    }
-
-    private fun startNewGame() {
         gameEngine.startNewGame()
     }
 

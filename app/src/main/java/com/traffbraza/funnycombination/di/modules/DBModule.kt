@@ -13,7 +13,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-class DBModule {
+object DBModule {
     @Provides
     @Singleton
     fun provideHighScoresDatabase(@ApplicationContext context: Context): HighScoresDatabase {
