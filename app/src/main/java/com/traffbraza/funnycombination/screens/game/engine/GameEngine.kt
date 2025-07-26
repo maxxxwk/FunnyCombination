@@ -21,6 +21,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
@@ -144,21 +145,19 @@ class GameEngine @Inject constructor(
         workManager.enqueue(workRequest)
         scope.launch(dispatcher) {
             workManager.getWorkInfoByIdFlow(workRequest.id).filterNotNull()
-                .collect { workInfo ->
-                    if (workInfo.state.isFinished) {
-                        if (workInfo.state == WorkInfo.State.SUCCEEDED) {
-                            val isNewHighScore = workInfo.outputData.getBoolean(
-                                SavingHighScoreWorker.IS_NEW_HIGH_SCORE_KEY,
-                                false
-                            )
-                            mutableStateFlow.value = gameOverState.copy(
-                                showGameOverDialogEvent = triggered(isNewHighScore)
-                            )
-                        } else {
-                            mutableStateFlow.value = gameOverState.copy(
-                                showGameOverDialogEvent = triggered(false)
-                            )
-                        }
+                .first { it.state.isFinished }.let { workInfo ->
+                    if (workInfo.state == WorkInfo.State.SUCCEEDED) {
+                        val isNewHighScore = workInfo.outputData.getBoolean(
+                            SavingHighScoreWorker.IS_NEW_HIGH_SCORE_KEY,
+                            false
+                        )
+                        mutableStateFlow.value = gameOverState.copy(
+                            showGameOverDialogEvent = triggered(isNewHighScore)
+                        )
+                    } else {
+                        mutableStateFlow.value = gameOverState.copy(
+                            showGameOverDialogEvent = triggered(false)
+                        )
                     }
                 }
         }
